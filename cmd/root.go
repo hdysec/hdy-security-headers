@@ -14,6 +14,7 @@ import (
 	"strings"
 )
 
+// Initialise colors for CLI output
 var cRed = color.New(color.FgHiWhite, color.BgHiRed)
 var cRedB = color.New(color.FgBlack, color.BgHiRed)
 var cGreen = color.New(color.FgBlack, color.BgHiGreen)
@@ -113,7 +114,7 @@ func matchRemoveableHeaders() map[string]string {
 func cleanUrl(httpUrl string) (string, string) {
 	//fmt.Println("Debug: Into cleanHttpUrl()")
 
-	// Strip the protocol for HTTP and HTTPS if provided
+	// Strip the protocol for HTTP and HTTPS if provided - necessary to perform scan on both HTTP and HTTPS of URL
 	providedUrl := strings.TrimPrefix(httpUrl, "http://")
 	providedUrl = strings.TrimPrefix(providedUrl, "https://")
 
@@ -130,6 +131,8 @@ func getRequest(cmd *cobra.Command, httpUrl []string) {
 	// Setup to use proxy string if there is a string provided otherwise use default http.client{}
 	var client *http.Client
 	proxyValue, _ := cmd.Flags().GetString("proxy")
+
+	// Configure HTTP Client to use burp proxy if proxy flag provided
 	if proxyValue != "" {
 		proxyUrl, err := url.Parse(proxyValue)
 		if err != nil {
@@ -137,7 +140,6 @@ func getRequest(cmd *cobra.Command, httpUrl []string) {
 			return
 		}
 		client = &http.Client{
-			// Configure HTTP Client to use burp proxy
 			Transport: &http.Transport{
 				Proxy: http.ProxyURL(proxyUrl),
 			},
@@ -157,6 +159,7 @@ func getRequest(cmd *cobra.Command, httpUrl []string) {
 			return
 		}
 
+		// handle redirect if flag is provided.
 		runRedirect, _ := cmd.Flags().GetBool("redirect") // check if redirect flag is set
 		if !runRedirect {
 			client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -164,12 +167,13 @@ func getRequest(cmd *cobra.Command, httpUrl []string) {
 			}
 		}
 
-		// set custom user-agent
+		// set custom user-agent and static headers
 		request.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:53.0) Gecko/20100101 Firefox/53.0")
 		request.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 		request.Header.Set("Accept-Language", "en-US;q=0.8,en;q=0.3")
 		request.Header.Set("Upgrade-Insecure-Requests", "1")
 
+		// functionality to set custom header
 		headerValue, _ := cmd.Flags().GetString("header")
 		if headerValue != "" {
 			headerParts := strings.SplitN(headerValue, ": ", 2)
@@ -193,7 +197,7 @@ func getRequest(cmd *cobra.Command, httpUrl []string) {
 		}
 
 		formatHeaders(response.Header)
-		defer response.Body.Close() // close the response body after finishing getRequest() function
+		defer response.Body.Close() // make sure app closes the response after finishing getRequest() function
 	}
 }
 
@@ -212,10 +216,11 @@ func formatHeaders(responseHeaders http.Header) {
 		missingHeaders   []string
 		remainingHeaders []string
 
-		//track headers we've seen to identify remaining ones later
+		//track headers seen to identify remaining ones later (what's left over and not filtered out into their category)
 		seenHeaders = map[string]bool{}
 	)
 
+	// Filter all headers from response based on the MAPS then assign to variables to print based on assignment
 	for k, values := range responseHeaders {
 		seenHeaders[k] = true // Mark this header as seen
 		valueStr := fmt.Sprintf("%s: %s", k, strings.Join(values, ", "))
@@ -247,7 +252,7 @@ func formatHeaders(responseHeaders http.Header) {
 				fmt.Printf("	  -> %s\n", recommendation) // This will now be in default color
 			}
 		} else {
-			cGreen.Println("FOUND: " + h) // If the header doesn't contain ": ", print the whole string in green
+			cGreen.Println("FOUND: " + h) // In case the header doesn't contain ": " then print the whole string
 		}
 	}
 	fmt.Printf("%s Provisional Security Headers Enabled:\n", yellowPlus)
@@ -263,7 +268,7 @@ func formatHeaders(responseHeaders http.Header) {
 				fmt.Printf("	  -> %s\n", recommendation) // This will now be in default color
 			}
 		} else {
-			cYellow.Println("FOUND: " + h) // If the header doesn't contain ": ", print the whole string in green
+			cYellow.Println("FOUND: " + h) // In case the header doesn't contain ": " then print the whole string
 		}
 	}
 	fmt.Printf("%s Missing Security Headers:\n", redMinus)
@@ -278,7 +283,7 @@ func formatHeaders(responseHeaders http.Header) {
 				fmt.Printf("	  -> %s\n", recommendation) // This will now be in default color
 			}
 		} else {
-			cRed.Println("FOUND: " + h) // If the header doesn't contain ": ", print the whole string in green
+			cRed.Println("FOUND: " + h) // In case the header doesn't contain ": " then print the whole string
 		}
 	}
 	fmt.Printf("%s Deprecated or Bad Headers Enabled:\n", redMinus)
@@ -293,19 +298,19 @@ func formatHeaders(responseHeaders http.Header) {
 				fmt.Printf("	  -> %s\n", recommendation) // This will now be in default color
 			}
 		} else {
-			cRedB.Println("FOUND: " + h) // If the header doesn't contain ": ", print the whole string in green
+			cRedB.Println("FOUND: " + h) // In case the header doesn't contain ": " then print the whole string
 		}
 	}
 
 	fmt.Printf("%s Remaining Headers Enabled:\n", greenPlus)
 	for _, h := range remainingHeaders {
 		parts := strings.SplitN(h, ": ", 2)
-		if len(parts) == 2 { // Check if the header string is properly split into key and value
-			colorKey := color.New(color.FgHiMagenta) // Choose your desired color for the key
-			colorKey.Printf("	%s: ", parts[0])       // Print the key in color
-			fmt.Println(parts[1])                    // Print the value normally
+		if len(parts) == 2 { // Check if the header string is properly split into <key> and <value>
+			colorKey := color.New(color.FgHiMagenta)
+			colorKey.Printf("	%s: ", parts[0]) // Print the <key> in color
+			fmt.Println(parts[1])              // Print the <value> normally
 		} else {
-			fmt.Println(h) // In case the header string doesn't contain ": ", print the whole string
+			fmt.Println(h) // In case the header doesn't contain ": " then print the whole string
 		}
 	}
 }
@@ -318,7 +323,6 @@ func Execute() {
 }
 
 func init() {
-	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().StringP("domain", "d", "", "Provide the domain excluding the protocol (http/s://). The tool works with the absolute path and won't follow redirects")
 	rootCmd.MarkFlagRequired("domain")
 	rootCmd.PersistentFlags().StringP("header", "H", "", "Provide optional header to include in scanning when doing authenticated scanning.")
