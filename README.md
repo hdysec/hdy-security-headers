@@ -32,7 +32,7 @@ None
 
 ## Installation
 
-As always, review code before using public tools. Program is written in golang; you will need Go installed in order to compile. Code is very simple and you can easily adjust to add your own comments, headers, and recommendations you want to keep track of.
+As always, review code before using public tools. Program is written in golang; you will need Go installed in order to compile. Code is very simple, and you can easily adjust to add your own comments, headers, and recommendations you want to keep track of.
 
 ```
 $ git clone https://github.com/hdysec/hdy-security-headers.git
