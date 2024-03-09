@@ -56,4 +56,6 @@ Flags:
   -r, --redirect        Instruct tool to follow redirect (Default is to ignore redirects)
 ```
 
+![image](https://imgur.com/3DWHaQi)
+
 
