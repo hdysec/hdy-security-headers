@@ -8,7 +8,7 @@ hdySecurityHeaders is part of a set of personal tools developed to cover robust 
 
 - This is a personal project for my personal workflow and may/may not receive updates and may/may not work. Who knows. :shrug: 
 - Sharing because sharing is caring.
-- Always review your local laws regarding use of tools that facilitate penetration testing.
+- Always review your local laws regarding use of tools that facilitate penetration testing and always seek permission before performing any testing on a client.
 
 ## Description
 
