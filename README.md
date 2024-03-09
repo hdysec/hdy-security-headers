@@ -14,6 +14,9 @@ hdySecurityHeaders is part of a set of personal tools developed to cover robust 
 
 hdySecurityHeaders is a personal tool to complete a preliminary HTTP scan, and facilitate a manual audit, of active or missing headers for the clients specific environment and tech stack. The tool will perform a check against a map of recommended and provisional headers that improve web applications as well as a map of headers that are insecure, require further attention, or are deprecated and should not be in use.
 
+![image](https://i.imgur.com/3DWHaQi.png)
+
+
 **Features**
 
 - **OS-agnostic**:  Tool is **OS-agnostic** as the application is built for portability in mind and can be compiled natively for both Windows and Linux platforms.
@@ -56,6 +59,5 @@ Flags:
   -r, --redirect        Instruct tool to follow redirect (Default is to ignore redirects)
 ```
 
-![image](https://i.imgur.com/3DWHaQi.png)
 
 
